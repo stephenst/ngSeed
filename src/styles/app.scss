@@ -1,0 +1,18 @@
+/* You can add global styles to this file, and also import other style files */
+@import "bootstrap/bootstrap";
+@import "spinner";
+@import "utils";
+@import "rtl";
+@import "responsive";
+
+.d3-multilinechart {
+    .axis--x path {
+        display: none;
+    }
+
+    .line {
+        fill: none !important;
+        stroke: steelblue;
+        stroke-width: 1.5px;
+    }
+}
