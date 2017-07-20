@@ -5,14 +5,3 @@
 @import "rtl";
 @import "responsive";
 
-.d3-multilinechart {
-    .axis--x path {
-        display: none;
-    }
-
-    .line {
-        fill: none !important;
-        stroke: steelblue;
-        stroke-width: 1.5px;
-    }
-}

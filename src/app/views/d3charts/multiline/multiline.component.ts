@@ -1,18 +1,37 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnInit, OnChanges, ViewChild, ElementRef, Input, ViewEncapsulation} from '@angular/core';
+import {routerTransition} from '../../../router.animations';
 
-import * as d3 from 'd3-selection';
+import * as d3 from 'd3';
 import * as d3Scale from 'd3-scale';
 import * as d3Shape from 'd3-shape';
 import * as d3Array from 'd3-array';
 import * as d3Axis from 'd3-axis';
 
 @Component({
-  selector: 'app-multiline',
-  templateUrl: './multiline.component.html',
-  styleUrls: ['./multiline.component.scss']
+    selector: 'app-multiline',
+    templateUrl: './multiline.component.html',
+    styleUrls: ['./multiline.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    animations: [routerTransition()]
 })
 export class MultilineComponent implements OnInit {
-    temperatures: Array<{id: string, values: Array<any>}> = [
+    @ViewChild('multiLineD3') private chartContainer: ElementRef;
+    @Input() private data: Array<any>;
+
+    private margin: any = { top: 20, bottom: 20, left: 20, right: 20};
+    private chart: any;
+    private width: number;
+    private height: number;
+    private xScale: any;
+    private yScale: any;
+    private zScale: any;
+    private colors: any;
+    private xAxis: any;
+    private yAxis: any;
+    private zAxis: any;
+    private line: any;
+
+    temperatures: Array<{ id: string, values: Array<any> }> = [
         {
             'id': 'New York',
             'values': [
@@ -159,24 +178,12 @@ export class MultilineComponent implements OnInit {
     title: string = 'D3.js with Angular 2!';
     subtitle: string = 'Multi-Series Line Chart';
 
-    data: any;
-
-    svg: any;
-    margin = {top: 20, right: 80, bottom: 30, left: 50};
-    g: any;
-    width: number;
-    height: number;
-    x;
-    y;
-    z;
-    line;
-
     constructor() {
 
     }
 
     ngOnInit() {
-        this.data = this.temperatures.map((v) => v.values.map((v) => v.date ))[0];
+        this.data = this.temperatures.map((v) => v.values.map((v) => v.date))[0];
         //.reduce((a, b) => a.concat(b), []);
 
         this.initChart();
@@ -185,41 +192,67 @@ export class MultilineComponent implements OnInit {
     }
 
     private initChart(): void {
-        this.svg = d3.select('svg#multiLineD3');
+        let element = this.chartContainer.nativeElement;
+        this.width = element.offsetWidth - this.margin.left - this.margin.right;
+        this.height = element.offsetHeight - this.margin.top - this.margin.bottom;
+        let svg = d3.select(element).append('svg')
+            .attr('width', element.offsetWidth)
+            .attr('height', element.offsetHeight);
 
-        this.width = this.svg.attr('width') - this.margin.left - this.margin.right;
-        this.height = this.svg.attr('height') - this.margin.top - this.margin.bottom;
+        // chart plot area
+        this.chart = svg.append('g')
+            .attr('class', 'bars')
+            .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
 
-        this.g = this.svg.append('g').attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')');
+        // create scales
+        this.xScale = d3Scale.scaleTime().range([0, this.width]);
+        this.yScale = d3Scale.scaleLinear().range([this.height, 0]);
+        this.zScale = d3Scale.scaleOrdinal(d3Scale.schemeCategory10);
 
-        this.x = d3Scale.scaleTime().range([0, this.width]);
-        this.y = d3Scale.scaleLinear().range([this.height, 0]);
-        this.z = d3Scale.scaleOrdinal(d3Scale.schemeCategory10);
+        // x & y axis
+        this.xAxis = svg.append('g')
+            .attr('class', 'axis axis-x')
+            .attr('transform', `translate(${this.margin.left}, ${this.margin.top + this.height})`)
+            .call(d3Axis.axisBottom(this.xScale));
+        this.yAxis = svg.append('g')
+            .attr('class', 'axis axis-y')
+            .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`)
+            .call(d3Axis.axisLeft(this.yScale));
 
         this.line = d3Shape.line()
             .curve(d3Shape.curveBasis)
-            .x( (d: any) => this.x(d.date) )
-            .y( (d: any) => this.y(d.temperature) );
+            .x((d: any) => this.xScale(d.date))
+            .y((d: any) => this.yScale(d.temperature));
 
-        this.x.domain(d3Array.extent(this.data, (d: Date) => d ));
+        this.xScale.domain(d3Array.extent(this.data, (d: Date) => d));
 
-        this.y.domain([
-            d3Array.min(this.temperatures, function(c) { return d3Array.min(c.values, function(d) { return d.temperature; }); }),
-            d3Array.max(this.temperatures, function(c) { return d3Array.max(c.values, function(d) { return d.temperature; }); })
+        this.yScale.domain([
+            d3Array.min(this.temperatures, function (c) {
+                return d3Array.min(c.values, function (d) {
+                    return d.temperature;
+                });
+            }),
+            d3Array.max(this.temperatures, function (c) {
+                return d3Array.max(c.values, function (d) {
+                    return d.temperature;
+                });
+            })
         ]);
 
-        this.z.domain(this.temperatures.map(function(c) { return c.id; }));
+        this.zScale.domain(this.temperatures.map(function (c) {
+            return c.id;
+        }));
     }
 
     private drawAxis(): void {
-        this.g.append('g')
+        this.chart.append('g')
             .attr('class', 'axis axis--x')
             .attr('transform', 'translate(0,' + this.height + ')')
-            .call(d3Axis.axisBottom(this.x));
+            .call(d3Axis.axisBottom(this.xScale));
 
-        this.g.append('g')
+        this.chart.append('g')
             .attr('class', 'axis axis--y')
-            .call(d3Axis.axisLeft(this.y))
+            .call(d3Axis.axisLeft(this.yScale))
             .append('text')
             .attr('transform', 'rotate(-90)')
             .attr('y', 6)
@@ -229,23 +262,27 @@ export class MultilineComponent implements OnInit {
     }
 
     private drawPath(): void {
-        let city = this.g.selectAll('.city')
+        let city = this.chart.selectAll('.city')
             .data(this.temperatures)
             .enter().append('g')
             .attr('class', 'city');
 
         city.append('path')
             .attr('class', 'line')
-            .attr('d', (d) => this.line(d.values) )
-            .style('stroke', (d) => this.z(d.id) );
+            .attr('d', (d) => this.line(d.values))
+            .style('stroke', (d) => this.zScale(d.id));
 
         city.append('text')
-            .datum(function(d) { return {id: d.id, value: d.values[d.values.length - 1]}; })
-            .attr('transform', (d) => 'translate(' + this.x(d.value.date) + ',' + this.y(d.value.temperature) + ')' )
+            .datum(function (d) {
+                return {id: d.id, value: d.values[d.values.length - 1]};
+            })
+            .attr('transform', (d) => 'translate(' + this.xScale(d.value.date) + ',' + this.yScale(d.value.temperature) + ')')
             .attr('x', 3)
             .attr('dy', '0.35em')
             .style('font', '10px sans-serif')
-            .text(function(d) { return d.id; });
+            .text(function (d) {
+                return d.id;
+            });
     }
 
 }
