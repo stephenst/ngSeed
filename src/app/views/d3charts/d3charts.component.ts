@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { routerTransition } from '../../router.animations';
 import * as d3 from 'd3';
@@ -11,14 +11,24 @@ import * as d3 from 'd3';
 
 
 export class D3chartsComponent implements OnInit {
-    constructor(public router: Router) { }
+    public barChartData: Array<any> = [];
+    constructor(public router: Router) { };
+    @Input('data') public data: Array<any>;
 
-    public data: Array<any> = [];
+    public randomizeBarChart(): void {
+        this.barChartData = [];
+        for (let i = 0; i < (8 + Math.floor(Math.random() * 10)); i++) {
+            this.barChartData.push([
+                `Index ${i}`,
+                Math.floor(Math.random() * 100)
+            ]);
+        }
+    }
 
     ngOnInit() {
-        this.data = [];
+        this.barChartData = [];
         for (let i = 0; i < (8 + Math.floor(Math.random() * 10)); i++) {
-            this.data.push([
+            this.barChartData.push([
                 `Index ${i}`,
                 Math.floor(Math.random() * 100)
             ]);

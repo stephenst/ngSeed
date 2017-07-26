@@ -7,10 +7,10 @@
                     Bar Chart
                 </div>
                 <div class="card-block">
-                    <app-bar-chart id="barChartD3"></app-bar-chart>
+                    <app-bar-chart id="barChartD3" [data]="barChartData"></app-bar-chart>
                 </div>
                 <div class="card-footer">
-                    <button class="btn btn-info btn-sm" (click)="randomize()">Update</button>
+                    <button class="btn btn-info btn-sm" (click)="randomizeBarChart()">Update</button>
                 </div>
             </div>
         </div>

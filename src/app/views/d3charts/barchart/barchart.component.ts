@@ -13,7 +13,7 @@ import * as d3 from 'd3';
 
 export class BarChartComponent implements OnInit, OnChanges {
     @ViewChild('chart') private chartContainer: ElementRef;
-    @Input() private data: Array<any>;
+    @Input('data') public data: Array<any>;
 
     private margin: any = { top: 20, bottom: 20, left: 20, right: 20};
     private chart: any;
@@ -126,15 +126,5 @@ export class BarChartComponent implements OnInit, OnChanges {
             .delay((d, i) => i * 10)
             .attr('y', d => this.yScale(d[1]))
             .attr('height', d => this.height - this.yScale(d[1]));
-    }
-
-    public randomize(): void {
-        this.data = [];
-        for (let i = 0; i < (8 + Math.floor(Math.random() * 10)); i++) {
-            this.data.push([
-                `Index ${i}`,
-                Math.floor(Math.random() * 100)
-            ]);
-        }
     }
 }
